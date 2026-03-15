@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
 import authRoutes from "./src/routes/auth.routes.js";
+import resourceRoutes from "./src/routes/resource.routes.js";
 
 dotenv.config();
 const app = express();
@@ -10,10 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use("/api/auth", authRoutes);
-
-app.get("/", (req, res) => {
-  res.send("hello ayush!!");
-});
+app.use("/api/resources", resourceRoutes);
 
 connectDB();
 

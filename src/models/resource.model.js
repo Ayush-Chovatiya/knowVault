@@ -7,6 +7,10 @@ const resourseSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+    },
     link: {
       type: String,
       required: true,
