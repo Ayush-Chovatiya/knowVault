@@ -1,32 +1,68 @@
 import Resource from "../models/resource.model.js";
+import { resourceSchema } from "../validators/resource.validator.js";
+import { ZodError } from "zod";
 
 const addResource = async (req, res) => {
   try {
-    const { title, link, category, tags, notes, isFav } = req.body;
+    const validatedData = resourceSchema.parse(req.body);
 
     const resource = await Resource.create({
       user: req.user.id,
-      title,
-      link,
-      category,
-      tags,
-      notes,
-      isFav,
+      ...validatedData,
     });
 
     return res
       .status(201)
       .json({ message: "Resource added successfully", resource });
   } catch (error) {
+    if (error instanceof ZodError) {
+      const formatted = error.flatten().fieldErrors;
+      return res.status(400).json({ message: formatted });
+    }
+
     return res.status(500).json({ message: error.message });
   }
 };
 
 const getResource = async (req, res) => {
   try {
-    const resources = await Resource.find({ user: req.user.id });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
+    const tag = req.query.tag;
+    const category = req.query.category;
+    const isFav = req.query.isFav;
+
+    const skip = (page - 1) * limit;
+
+    const query = {
+      user: req.user.id,
+      title: { $regex: search, $options: "i" },
+    };
+
+    if (tags) {
+      query.tag = tag;
+    }
+
+    if (category) {
+      query.category = category;
+    }
+
+    if (isFav) {
+      query.isFav = isFav;
+    }
+
+    const resources = await Resource.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Resource.countDocuments(query);
+
     return res.status(200).json({
-      count: resources.length,
+      page,
+      limit,
+      total,
       resources,
     });
   } catch (error) {

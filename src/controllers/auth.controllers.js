@@ -1,10 +1,14 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { registerSchema, loginSchema } from "../validators/auth.validator.js";
+import { ZodError } from "zod";
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const validatedData = registerSchema.parse(req.body);
+
+    const { name, email, password } = validatedData;
 
     const existingUser = await User.findOne({ name });
 
@@ -22,13 +26,18 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({ meassage: "User created succesfully!!", user });
   } catch (error) {
+    if (error instanceof ZodError) {
+      const formatted = error.flatten().fieldErrors;
+      return res.status(400).json({ message: formatted });
+    }
+
     res.status(500).json({ message: error.meassage });
   }
 };
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = loginSchema.parse(req.body);
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -47,6 +56,11 @@ const loginUser = async (req, res) => {
 
     res.json({ message: "Login Succesful", token });
   } catch (error) {
+    if (error instanceof ZodError) {
+      const formatted = error.flatten().fieldErrors;
+      return res.status(400).json({ message: formatted });
+    }
+
     res.status(500).json({ message: error.message });
   }
 };
