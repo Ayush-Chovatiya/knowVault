@@ -41,20 +41,24 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      res.status(400).json({ message: "User not found!!" });
+      return res.status(400).json({ message: "User not found!!" });
     }
 
     const isCorrect = await bcrypt.compare(password, user.password);
 
     if (!isCorrect) {
-      res.status(400).json({ message: "Incorrect password!!" });
+      return res.status(400).json({ message: "Incorrect password!!" });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.json({ message: "Login Succesful", token });
+    res.json({
+      message: "Login Succesful",
+      token,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       const formatted = error.flatten().fieldErrors;

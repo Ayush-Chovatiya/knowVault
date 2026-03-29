@@ -40,8 +40,8 @@ const getResource = async (req, res) => {
       title: { $regex: search, $options: "i" },
     };
 
-    if (tags) {
-      query.tag = tag;
+    if (tag) {
+      query.tags = tag;
     }
 
     if (category) {
