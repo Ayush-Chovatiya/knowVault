@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/material";
 import { useAuth } from "../hooks/useAuth";
 
 export function ProtectedRoute({ children }) {
@@ -7,9 +8,17 @@ export function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
-      </div>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "background.default",
+        }}
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 

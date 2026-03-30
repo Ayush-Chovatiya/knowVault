@@ -2,16 +2,14 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box,
   Typography,
-  Button,
   TextField,
   InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Grid,
 } from "@mui/material";
-import { Add as AddIcon, Search as SearchIcon } from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  StarBorder as StarBorderIcon,
+} from "@mui/icons-material";
 import { Layout } from "../components/layout/Layout";
 import { ResourceCard } from "../components/resources/ResourceCard";
 import { ResourceCardSkeleton } from "../components/resources/ResourceCardSkeleton";
@@ -20,26 +18,12 @@ import { EmptyState } from "../components/common/EmptyState";
 import { resourceService } from "../services/resourceService";
 import { useSnackbar } from "../hooks/useSnackbar";
 
-const CATEGORIES = [
-  "all",
-  "general",
-  "tutorial",
-  "documentation",
-  "article",
-  "video",
-  "course",
-  "tool",
-  "library",
-  "other",
-];
-
-export function Dashboard() {
+export function Favorites() {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
 
   const { showSnackbar } = useSnackbar();
 
@@ -47,10 +31,11 @@ export function Dashboard() {
     setLoading(true);
     try {
       const data = await resourceService.getAll();
-      setResources(data.resources || []);
+      const favorites = (data.resources || []).filter((r) => r.isFavorite);
+      setResources(favorites);
     } catch (err) {
       showSnackbar(
-        err.response?.data?.message || "Failed to fetch resources",
+        err.response?.data?.message || "Failed to fetch favorites",
         "error",
       );
     } finally {
@@ -63,23 +48,19 @@ export function Dashboard() {
   }, [fetchResources]);
 
   const filteredResources = useMemo(() => {
-    return resources.filter((resource) => {
-      const matchesSearch =
-        !searchQuery ||
+    if (!searchQuery) return resources;
+
+    return resources.filter(
+      (resource) =>
         resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.tags?.some((tag) =>
           tag.toLowerCase().includes(searchQuery.toLowerCase()),
-        );
+        ),
+    );
+  }, [resources, searchQuery]);
 
-      const matchesCategory =
-        categoryFilter === "all" || resource.category === categoryFilter;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [resources, searchQuery, categoryFilter]);
-
-  const handleOpenDialog = (resource = null) => {
+  const handleOpenDialog = (resource) => {
     setEditingResource(resource);
     setDialogOpen(true);
   };
@@ -91,17 +72,12 @@ export function Dashboard() {
 
   const handleSubmit = async (data) => {
     try {
-      if (data._id) {
-        await resourceService.update(data._id, data);
-        showSnackbar("Resource updated successfully", "success");
-      } else {
-        await resourceService.create(data);
-        showSnackbar("Resource added successfully", "success");
-      }
+      await resourceService.update(data._id, data);
+      showSnackbar("Resource updated successfully", "success");
       fetchResources();
     } catch (err) {
       showSnackbar(
-        err.response?.data?.message || "Failed to save resource",
+        err.response?.data?.message || "Failed to update resource",
         "error",
       );
       throw err;
@@ -124,13 +100,10 @@ export function Dashboard() {
   const handleToggleFavorite = async (id, isFavorite) => {
     try {
       await resourceService.update(id, { isFavorite });
-      setResources((prev) =>
-        prev.map((r) => (r._id === id ? { ...r, isFavorite } : r)),
-      );
-      showSnackbar(
-        isFavorite ? "Added to favorites" : "Removed from favorites",
-        "success",
-      );
+      if (!isFavorite) {
+        setResources((prev) => prev.filter((r) => r._id !== id));
+      }
+      showSnackbar("Removed from favorites", "success");
     } catch (err) {
       showSnackbar("Failed to update favorite status", "error");
     }
@@ -150,32 +123,18 @@ export function Dashboard() {
         }}
       >
         <Typography variant="h4" fontWeight={700}>
-          My Resources
+          Favorites
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Resource
-        </Button>
       </Box>
 
-      {/* Filters */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          gap: 2,
-          mb: 4,
-        }}
-      >
+      {/* Search */}
+      <Box sx={{ mb: 4 }}>
         <TextField
-          placeholder="Search resources..."
+          placeholder="Search favorites..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           size="small"
-          sx={{ flex: 1, maxWidth: { md: 400 } }}
+          sx={{ maxWidth: 400, width: "100%" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -184,20 +143,6 @@ export function Dashboard() {
             ),
           }}
         />
-        <FormControl size="small" sx={{ minWidth: 150 }}>
-          <InputLabel>Category</InputLabel>
-          <Select
-            value={categoryFilter}
-            label="Category"
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            {CATEGORIES.map((cat) => (
-              <MenuItem key={cat} value={cat}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
       </Box>
 
       {/* Loading State */}
@@ -214,25 +159,12 @@ export function Dashboard() {
       {/* Empty State */}
       {!loading && filteredResources.length === 0 && (
         <EmptyState
-          title={
-            searchQuery || categoryFilter !== "all"
-              ? "No matching resources"
-              : "No resources yet"
-          }
+          icon={StarBorderIcon}
+          title={searchQuery ? "No matching favorites" : "No favorites yet"}
           description={
-            searchQuery || categoryFilter !== "all"
-              ? "Try adjusting your search or filter criteria."
-              : "Get started by adding your first resource."
-          }
-          actionLabel={
-            !searchQuery && categoryFilter === "all"
-              ? "Add your first resource"
-              : undefined
-          }
-          onAction={
-            !searchQuery && categoryFilter === "all"
-              ? () => handleOpenDialog()
-              : undefined
+            searchQuery
+              ? "Try adjusting your search criteria."
+              : "Star your favorite resources to see them here."
           }
         />
       )}
@@ -253,7 +185,7 @@ export function Dashboard() {
         </Grid>
       )}
 
-      {/* Add/Edit Dialog */}
+      {/* Edit Dialog */}
       <ResourceDialog
         open={dialogOpen}
         onClose={handleCloseDialog}
