@@ -24,14 +24,22 @@ const registerUser = async (req, res) => {
       password: hashedPass,
     });
 
-    res.status(201).json({ meassage: "User created succesfully!!", user });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.status(201).json({
+      message: "User created successfully!",
+      token,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       const formatted = error.flatten().fieldErrors;
       return res.status(400).json({ message: formatted });
     }
 
-    res.status(500).json({ message: error.meassage });
+    res.status(500).json({ message: error.message });
   }
 };
 

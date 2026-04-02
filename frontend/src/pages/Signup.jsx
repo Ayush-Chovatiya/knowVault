@@ -39,9 +39,13 @@ export function Signup() {
       await signup(name, email, password);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Signup failed. Please try again.",
-      );
+      const message =
+        err.response?.data?.message || "Signup failed. Please try again.";
+      if (typeof message === "object" && message !== null) {
+        setError(Object.values(message).flat().join(", "));
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

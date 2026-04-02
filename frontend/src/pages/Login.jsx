@@ -41,9 +41,13 @@ export function Login() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again.",
-      );
+      const message =
+        err.response?.data?.message || "Login failed. Please try again.";
+      if (typeof message === "object" && message !== null) {
+        setError(Object.values(message).flat().join(", "));
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

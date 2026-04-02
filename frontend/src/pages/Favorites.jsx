@@ -31,7 +31,7 @@ export function Favorites() {
     setLoading(true);
     try {
       const data = await resourceService.getAll();
-      const favorites = (data.resources || []).filter((r) => r.isFavorite);
+      const favorites = (data.resources || []).filter((r) => r.isFav);
       setResources(favorites);
     } catch (err) {
       showSnackbar(
@@ -97,10 +97,10 @@ export function Favorites() {
     }
   };
 
-  const handleToggleFavorite = async (id, isFavorite) => {
+  const handleToggleFavorite = async (id, isFav) => {
     try {
-      await resourceService.update(id, { isFavorite });
-      if (!isFavorite) {
+      await resourceService.update(id, { isFav });
+      if (!isFav) {
         setResources((prev) => prev.filter((r) => r._id !== id));
       }
       showSnackbar("Removed from favorites", "success");
@@ -149,7 +149,7 @@ export function Favorites() {
       {loading && (
         <Grid container spacing={3}>
           {[...Array(6)].map((_, index) => (
-            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={index}>
+            <Grid item xs={12} sm={6} lg={4} key={index}>
               <ResourceCardSkeleton />
             </Grid>
           ))}
@@ -173,7 +173,7 @@ export function Favorites() {
       {!loading && filteredResources.length > 0 && (
         <Grid container spacing={3}>
           {filteredResources.map((resource) => (
-            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={resource._id}>
+            <Grid item xs={12} sm={6} md={4} xl={3} key={resource._id}>
               <ResourceCard
                 resource={resource}
                 onEdit={handleOpenDialog}

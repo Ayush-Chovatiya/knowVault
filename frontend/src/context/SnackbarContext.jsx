@@ -13,7 +13,13 @@ export function SnackbarProvider({ children }) {
   });
 
   const showSnackbar = useCallback((message, severity = "info") => {
-    setSnackbar({ open: true, message, severity });
+    // Handle case where message is an object (e.g., Zod validation errors)
+    let displayMessage = message;
+    if (typeof message === "object" && message !== null) {
+      // Convert object to readable string
+      displayMessage = Object.values(message).flat().join(", ");
+    }
+    setSnackbar({ open: true, message: displayMessage, severity });
   }, []);
 
   const handleClose = (event, reason) => {

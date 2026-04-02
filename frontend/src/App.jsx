@@ -7,7 +7,6 @@ import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import { Dashboard } from "./pages/Dashboard";
 import { Favorites } from "./pages/Favorites";
-import { Categories } from "./pages/Categories";
 
 function App() {
   return (
@@ -31,14 +30,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Favorites />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/categories"
-                element={
-                  <ProtectedRoute>
-                    <Categories />
                   </ProtectedRoute>
                 }
               />

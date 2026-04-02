@@ -79,6 +79,16 @@ export function Dashboard() {
     });
   }, [resources, searchQuery, categoryFilter]);
 
+  // Count resources per category
+  const categoryCounts = useMemo(() => {
+    const counts = { all: resources.length };
+    resources.forEach((resource) => {
+      const cat = resource.category || "general";
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [resources]);
+
   const handleOpenDialog = (resource = null) => {
     setEditingResource(resource);
     setDialogOpen(true);
@@ -121,14 +131,14 @@ export function Dashboard() {
     }
   };
 
-  const handleToggleFavorite = async (id, isFavorite) => {
+  const handleToggleFavorite = async (id, isFav) => {
     try {
-      await resourceService.update(id, { isFavorite });
+      await resourceService.update(id, { isFav });
       setResources((prev) =>
-        prev.map((r) => (r._id === id ? { ...r, isFavorite } : r)),
+        prev.map((r) => (r._id === id ? { ...r, isFav } : r)),
       );
       showSnackbar(
-        isFavorite ? "Added to favorites" : "Removed from favorites",
+        isFav ? "Added to favorites" : "Removed from favorites",
         "success",
       );
     } catch (err) {
@@ -184,7 +194,7 @@ export function Dashboard() {
             ),
           }}
         />
-        <FormControl size="small" sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 180 }}>
           <InputLabel>Category</InputLabel>
           <Select
             value={categoryFilter}
@@ -192,8 +202,25 @@ export function Dashboard() {
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
             {CATEGORIES.map((cat) => (
-              <MenuItem key={cat} value={cat}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              <MenuItem key={cat} value={cat} sx={{ justifyContent: "space-between" }}>
+                <span>{cat.charAt(0).toUpperCase() + cat.slice(1)}</span>
+                {categoryFilter !== cat && (
+                  <Typography
+                    component="span"
+                    variant="caption"
+                    sx={{
+                      ml: 2,
+                      px: 1,
+                      py: 0.25,
+                      borderRadius: 1,
+                      bgcolor: "action.hover",
+                      color: "text.secondary",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {categoryCounts[cat] || 0}
+                  </Typography>
+                )}
               </MenuItem>
             ))}
           </Select>
@@ -202,13 +229,15 @@ export function Dashboard() {
 
       {/* Loading State */}
       {loading && (
-        <Grid container spacing={3}>
-          {[...Array(6)].map((_, index) => (
-            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={index}>
-              <ResourceCardSkeleton />
-            </Grid>
-          ))}
-        </Grid>
+        <Box sx={{ px: { xs: 0, md: 2 } }}>
+          <Grid container spacing={3}>
+            {[...Array(6)].map((_, index) => (
+              <Grid item xs={12} sm={6} md={4} xl={3} key={index}>
+                <ResourceCardSkeleton />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       )}
 
       {/* Empty State */}
@@ -239,18 +268,20 @@ export function Dashboard() {
 
       {/* Resources Grid */}
       {!loading && filteredResources.length > 0 && (
-        <Grid container spacing={3}>
-          {filteredResources.map((resource) => (
-            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={resource._id}>
-              <ResourceCard
-                resource={resource}
-                onEdit={handleOpenDialog}
-                onDelete={handleDelete}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            </Grid>
-          ))}
-        </Grid>
+        <Box sx={{ px: { xs: 0, md: 2 } }}>
+          <Grid container spacing={3}>
+            {filteredResources.map((resource) => (
+              <Grid item xs={12} sm={6} md={4} xl={3} key={resource._id}>
+                <ResourceCard
+                  resource={resource}
+                  onEdit={handleOpenDialog}
+                  onDelete={handleDelete}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       )}
 
       {/* Add/Edit Dialog */}

@@ -22,29 +22,51 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const login = async (email, password) => {
-    const response = await api.post("/auth/login", { email, password });
-    const { token: newToken, user: userData } = response.data;
+    try {
+      const response = await api.post("/auth/login", { email, password });
+      const { token: newToken, user: userData } = response.data;
 
-    localStorage.setItem("token", newToken);
-    localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("user", JSON.stringify(userData));
 
-    setToken(newToken);
-    setUser(userData);
+      setToken(newToken);
+      setUser(userData);
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      // Re-throw with consistent error structure for the Login component to handle
+      const message =
+        error.response?.data?.message || "Login failed. Please try again.";
+      const err = new Error(message);
+      err.response = { data: { message } };
+      throw err;
+    }
   };
 
   const signup = async (name, email, password) => {
-    const response = await api.post("/auth/signup", { name, email, password });
-    const { token: newToken, user: userData } = response.data;
+    try {
+      const response = await api.post("/auth/register", {
+        name,
+        email,
+        password,
+      });
+      const { token: newToken, user: userData } = response.data;
 
-    localStorage.setItem("token", newToken);
-    localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("user", JSON.stringify(userData));
 
-    setToken(newToken);
-    setUser(userData);
+      setToken(newToken);
+      setUser(userData);
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      // Re-throw with consistent error structure for the Signup component to handle
+      const message =
+        error.response?.data?.message || "Signup failed. Please try again.";
+      const err = new Error(message);
+      err.response = { data: { message } };
+      throw err;
+    }
   };
 
   const logout = () => {

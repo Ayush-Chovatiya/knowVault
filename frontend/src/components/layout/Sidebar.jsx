@@ -12,7 +12,6 @@ import {
 import {
   Dashboard as DashboardIcon,
   Star as StarIcon,
-  Category as CategoryIcon,
   Inventory as InventoryIcon,
 } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -23,7 +22,6 @@ const DRAWER_WIDTH_MOBILE = 260;
 const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
   { text: "Favorites", icon: <StarIcon />, path: "/favorites" },
-  { text: "Categories", icon: <CategoryIcon />, path: "/categories" },
 ];
 
 export function Sidebar({ open, onClose }) {
