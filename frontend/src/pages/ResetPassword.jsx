@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
+import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -16,33 +16,47 @@ import {
   Visibility,
   VisibilityOff,
   Inventory as InventoryIcon,
+  ArrowBack,
 } from "@mui/icons-material";
-import { useAuth } from "../hooks/useAuth";
+import api from "../services/api";
 
-export function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const { login } = useAuth();
+export function ResetPassword() {
+  const { token } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const from = location.state?.from?.pathname || "/dashboard";
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
+      const response = await api.post("/auth/reset-password", {
+        token,
+        password,
+      });
+      setSuccess(response.data.message);
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       const message =
-        err.response?.data?.message || "Login failed. Please try again.";
+        err.response?.data?.message ||
+        "Something went wrong. Please try again.";
       if (typeof message === "object" && message !== null) {
         setError(Object.values(message).flat().join(", "));
       } else {
@@ -85,12 +99,19 @@ export function Login() {
               <InventoryIcon sx={{ color: "white", fontSize: 32 }} />
             </Box>
             <Typography variant="h4" fontWeight={700} gutterBottom>
-              Welcome back
+              Reset password
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Sign in to your KnowVault account
+              Enter your new password below
             </Typography>
           </Box>
+
+          {/* Success Alert */}
+          {success && (
+            <Alert severity="success" sx={{ mb: 3 }}>
+              {success}
+            </Alert>
+          )}
 
           {/* Error Alert */}
           {error && (
@@ -102,26 +123,15 @@ export function Login() {
           {/* Form */}
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
-              label="Email address"
-              type="email"
-              fullWidth
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              autoFocus
-              sx={{ mb: 2.5 }}
-            />
-
-            <TextField
-              label="Password"
+              label="New password"
               type={showPassword ? "text" : "password"}
               fullWidth
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              sx={{ mb: 1 }}
+              autoComplete="new-password"
+              autoFocus
+              sx={{ mb: 2.5 }}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -136,39 +146,58 @@ export function Login() {
               }}
             />
 
-            <Box sx={{ textAlign: "right", mb: 3 }}>
-              <Link
-                component={RouterLink}
-                to="/forgot-password"
-                variant="body2"
-                fontWeight={500}
-              >
-                Forgot password?
-              </Link>
-            </Box>
+            <TextField
+              label="Confirm new password"
+              type={showConfirmPassword ? "text" : "password"}
+              fullWidth
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              sx={{ mb: 3 }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
 
             <Button
               type="submit"
               variant="contained"
               fullWidth
               size="large"
-              disabled={loading}
+              disabled={loading || success}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Resetting..." : "Reset password"}
             </Button>
           </Box>
 
           {/* Footer */}
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 3, textAlign: "center" }}
-          >
-            Don't have an account?{" "}
-            <Link component={RouterLink} to="/signup" fontWeight={500}>
-              Create one
+          <Box sx={{ mt: 3, textAlign: "center" }}>
+            <Link
+              component={RouterLink}
+              to="/login"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.5,
+              }}
+              fontWeight={500}
+            >
+              <ArrowBack fontSize="small" />
+              Back to login
             </Link>
-          </Typography>
+          </Box>
         </CardContent>
       </Card>
     </Box>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -17,7 +18,7 @@ import {
   DarkMode,
   LightMode,
   Logout,
-  Person,
+  LockReset,
 } from "@mui/icons-material";
 import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../hooks/useTheme";
@@ -27,6 +28,7 @@ const DRAWER_WIDTH = 72;
 export function Navbar({ onMenuClick }) {
   const { user, logout } = useAuth();
   const { mode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleMenuOpen = (event) => {
@@ -40,6 +42,11 @@ export function Navbar({ onMenuClick }) {
   const handleLogout = () => {
     handleMenuClose();
     logout();
+  };
+
+  const handleResetPassword = () => {
+    handleMenuClose();
+    navigate("/forgot-password");
   };
 
   const getInitials = (name) => {
@@ -130,11 +137,11 @@ export function Navbar({ onMenuClick }) {
               </Typography>
             </Box>
             <Divider />
-            <MenuItem onClick={handleMenuClose}>
+            <MenuItem onClick={handleResetPassword}>
               <ListItemIcon>
-                <Person fontSize="small" />
+                <LockReset fontSize="small" />
               </ListItemIcon>
-              Profile
+              Reset Password
             </MenuItem>
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
