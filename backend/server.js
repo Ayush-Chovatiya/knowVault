@@ -13,6 +13,11 @@ app.use(cors());
 app.use("/api/auth", authRoutes);
 app.use("/api/resources", resourceRoutes);
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "healthy", uptime: process.uptime() });
+});
+
 connectDB();
 
 const PORT = process.env.PORT || 8000;
